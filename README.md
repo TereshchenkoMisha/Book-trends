@@ -5,4 +5,5 @@ on the timeline how wars, technological breakthroughs, and social movements infl
 ## Data Storage
 Due to big size of the dataset, they are stored on Google Drive:
 * **[Raw data folder:](https://drive.google.com/drive/folders/1y9T4hy28kPubAQgYPswVDS-7vir1zfAL?usp=sharing)** — initial scraped JSON files.
-**Team:** Saida Musaeva, Anna Tikhonova, Mikhail Tereshchenko
+## Team: 
+Saida Musaeva, Anna Tikhonova, Mikhail Tereshchenko
