@@ -13,7 +13,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s | %(message)s', datefmt='%H:%M:%S')
 
-DATASET_FILE = "goodreads_dataset.csv"
+DATASET_FILE = "data/raw/goodreads_dataset.csv"
 MAX_WORKERS = 4
 USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
