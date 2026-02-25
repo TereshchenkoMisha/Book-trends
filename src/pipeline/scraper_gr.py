@@ -142,7 +142,7 @@ def fetch_book(book_id):
 
 def gr_scraper_main():
     threading.Thread(target=csv_writer_worker, daemon=True).start()
-    curr_id = 102070
+    curr_id = 103517
 
     logging.info(f" (ID: {curr_id})...")
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
