@@ -1,1 +1,0 @@
-{"events": [], "figures": ["Harry Potter", "Hermione", "Ron", "Cho Chang", "Neville Weasley", "Arthur Weasley", "Molly Weasley"]}
