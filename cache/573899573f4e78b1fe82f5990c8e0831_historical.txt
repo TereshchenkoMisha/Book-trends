@@ -1,0 +1,1 @@
+{"events": [], "figures": ["Harry Potter", "Hermione", "Ron", "Draco Malfoy", "Professor Snape"]}
