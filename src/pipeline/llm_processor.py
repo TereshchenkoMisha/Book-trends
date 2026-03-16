@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import asyncio
 import json
 import logging
@@ -262,4 +261,3 @@ async def enrich_book(book: Dict) -> Dict:
 async def process_batch(books: List[Dict]):
     tasks = [enrich_book(book) for book in books]
     return await asyncio.gather(*tasks)
->>>>>>> 085982b2db59a7a073769d3ef3f50c30299e9603
