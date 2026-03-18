@@ -1,0 +1,59 @@
+2026-03-16 18:20:24,287 - INFO - Загрузка данных из ./data/raw/goodreads_ds_sample.csv
+2026-03-16 18:23:42,398 - INFO - Загрузка данных из ./data/raw/goodreads_ds_sample.csv
+2026-03-16 18:23:42,399 - INFO - Загрузка данных из ./data/raw/goodreads_ds_sample.csv
+2026-03-16 18:23:42,411 - INFO - Загружено 9 книг
+2026-03-16 18:23:42,411 - INFO - Загружено 9 книг
+2026-03-16 18:23:42,412 - INFO - Всего батчей: 1
+2026-03-16 18:23:42,412 - INFO - Обработка батча 1/1 (книги 1-9)
+2026-03-16 18:23:45,445 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:23:45,652 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:23:45,843 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:23:46,081 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:23:46,310 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:23:46,516 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:23:46,732 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:23:46,943 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:23:47,091 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:23:47,616 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:23:48,924 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:23:49,146 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:23:50,027 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:23:50,931 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:23:51,792 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:23:53,045 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:23:53,452 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:23:53,784 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:23:53,786 - INFO - Батч 1 завершён за 11.37 сек. Примерно 1.26 сек/книга
+2026-03-16 18:23:54,798 - INFO - Обработка завершена. Объединение результатов...
+2026-03-16 18:23:54,799 - INFO - Итоговый файл сохранён: output\enriched_all.json
+2026-03-16 18:23:56,101 - INFO - Загрузка данных из ./data/raw/goodreads_ds_sample.csv
+2026-03-16 18:23:56,104 - INFO - Загружено 9 книг
+2026-03-16 18:23:56,104 - INFO - Найден чекпоинт: начинаем с батча 1
+2026-03-16 18:23:56,105 - INFO - Всего батчей: 1
+2026-03-16 18:23:56,105 - INFO - Обработка завершена. Объединение результатов...
+2026-03-16 18:23:56,106 - INFO - Итоговый файл сохранён: output\enriched_all.json
+2026-03-16 18:33:23,537 - INFO - Загрузка данных из ./data/raw/goodreads_ds_sample.csv
+2026-03-16 18:33:23,540 - INFO - Загружено 9 книг
+2026-03-16 18:33:23,541 - INFO - Всего батчей: 1
+2026-03-16 18:33:23,541 - INFO - Обработка батча 1/1 (книги 1-9)
+2026-03-16 18:33:26,919 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:33:27,106 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:33:27,340 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:33:27,601 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:33:27,845 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:33:28,073 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:33:28,300 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:33:28,521 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:33:28,667 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:33:29,211 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:33:29,595 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:33:31,357 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:33:32,590 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:33:33,865 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:33:35,140 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:33:36,930 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:33:37,393 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:33:37,786 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-03-16 18:33:37,789 - INFO - Батч 1 завершён за 14.25 сек. Примерно 1.58 сек/книга
+2026-03-16 18:33:38,795 - INFO - Обработка завершена. Объединение результатов...
+2026-03-16 18:33:38,804 - INFO - Итоговый файл сохранён: output\enriched_all.json
