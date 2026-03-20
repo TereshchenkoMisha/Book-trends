@@ -19,11 +19,11 @@ from openai import APITimeoutError, APIConnectionError, RateLimitError, APIStatu
 ZHIPU_API_KEY = os.environ.get("ZHIPU_API_KEY", "3f9309b05fcc44798346932a9ac95c75.2AgAcYv9olBknU0J")
 BASE_URL = "https://open.bigmodel.cn/api/paas/v4/"
 MODEL_NAME = "glm-4-flash"
-CONCURRENCY = 1
+CONCURRENCY = 7
 MAX_RETRIES = 5
 INITIAL_RETRY_DELAY = 1.0
 MAX_RETRY_DELAY = 30.0
-INPUT_CSV = "./data/raw/goodreads_ds_sample.csv"
+INPUT_CSV = "./data/raw/goodreads_dataset_copy.csv"
 OUTPUT_JSON = "./data/processed/books_enriched.json"
 ENCODING = "utf-8"
 DOUBLE_VALIDATION = True
@@ -395,7 +395,7 @@ def main():
         print(f"Error: Файл {INPUT_CSV} не найден.")
         return
     try:
-        df = pd.read_csv(INPUT_CSV, encoding=ENCODING)
+        df = pd.read_csv(INPUT_CSV, encoding=ENCODING, low_memory=False)
         df.columns = df.columns.str.strip()
         df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
     except Exception as e:
