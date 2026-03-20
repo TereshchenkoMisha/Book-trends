@@ -193,7 +193,7 @@ Characters: {characters}
             model=MODEL_NAME,
             messages=[{"role": "user", "content": prompt}],
             temperature=0,
-            max_tokens=600
+            max_tokens=1500
         )
     try:
         response = await call_with_retry(_make_call)
@@ -247,7 +247,7 @@ Only output valid JSON with these four keys.
             model=MODEL_NAME,
             messages=[{"role": "user", "content": prompt}],
             temperature=0,
-            max_tokens=1200
+            max_tokens=1500
         )
     try:
         response = await call_with_retry(_make_call)
