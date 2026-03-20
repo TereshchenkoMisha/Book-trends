@@ -3,15 +3,14 @@
 
 """
 Improved AI-pipeline for book data enrichment using Zhipu AI (GLM-4-Flash).
-Includes retry mechanism with exponential backoff for handling timeouts and transient errors.
-Reads from CSV, processes each book, and saves enriched JSON.
+Includes retry mechanism, double validation, and post‑processing to remove
+historical fields from fiction books.
 """
 
 import os
 import json
 import re
 import asyncio
-import time
 import pandas as pd
 from openai import AsyncOpenAI
 from openai import APITimeoutError, APIConnectionError, RateLimitError, APIStatusError
@@ -20,13 +19,14 @@ from openai import APITimeoutError, APIConnectionError, RateLimitError, APIStatu
 ZHIPU_API_KEY = os.environ.get("ZHIPU_API_KEY", "3f9309b05fcc44798346932a9ac95c75.2AgAcYv9olBknU0J")
 BASE_URL = "https://open.bigmodel.cn/api/paas/v4/"
 MODEL_NAME = "glm-4-flash"
-CONCURRENCY = 1  # Пока оставим 1 для надёжности
-MAX_RETRIES = 5  # Максимальное количество повторных попыток
-INITIAL_RETRY_DELAY = 1.0  # Начальная задержка в секундах
-MAX_RETRY_DELAY = 30.0  # Максимальная задержка
+CONCURRENCY = 1
+MAX_RETRIES = 5
+INITIAL_RETRY_DELAY = 1.0
+MAX_RETRY_DELAY = 30.0
 INPUT_CSV = "./data/raw/goodreads_ds_sample.csv"
 OUTPUT_JSON = "./data/processed/books_enriched.json"
 ENCODING = "utf-8"
+DOUBLE_VALIDATION = True
 
 COL_TITLE = "title"
 COL_AUTHOR = "author"
@@ -35,65 +35,50 @@ COL_LANGUAGE = "language"
 
 # ======================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ========================
 def safe_print_error(e):
-    """Безопасно выводит ошибку, игнорируя проблемы кодировки."""
     try:
         print(str(e).encode('ascii', 'ignore').decode('ascii'))
     except:
         print("Произошла ошибка, но не удалось вывести детали.")
 
 def extract_json(text):
-    """Извлекает JSON из текста ответа модели, поддерживает пояснения."""
     if not text or not text.strip():
         return None
-    # Ищем JSON-объект (в фигурных скобках) или массив (в квадратных)
-    match = re.search(r'(\{.*\}|\[.*\])', text, re.DOTALL)
+    cleaned = re.sub(r'^```(?:json)?\s*', '', text, flags=re.IGNORECASE)
+    cleaned = re.sub(r'\s*```$', '', cleaned)
+    match = re.search(r'(\{.*\}|\[.*\])', cleaned, re.DOTALL)
     if match:
         candidate = match.group(1)
         try:
             return json.loads(candidate)
         except json.JSONDecodeError:
             pass
-    # Если не нашли, пробуем распарсить весь текст
     try:
-        return json.loads(text)
+        return json.loads(cleaned)
     except json.JSONDecodeError:
         return None
 
 def should_retry(error):
-    """Определяет, стоит ли повторить запрос при данной ошибке."""
-    # Транзиентные ошибки, которые имеют смысл повторить
-    retryable_errors = (
-        APITimeoutError,           # Таймаут
-        APIConnectionError,        # Проблемы с соединением
-        RateLimitError,            # 429 Too Many Requests
-    )
+    retryable_errors = (APITimeoutError, APIConnectionError, RateLimitError)
     if isinstance(error, retryable_errors):
         return True
-    # Для APIStatusError (4xx, 5xx) повторим только 5xx и 429
     if isinstance(error, APIStatusError):
         return error.status_code >= 500 or error.status_code == 429
     return False
 
 async def call_with_retry(func, *args, **kwargs):
-    """Универсальная функция для вызова API с повторными попытками."""
     last_error = None
     delay = INITIAL_RETRY_DELAY
-    
-    for attempt in range(MAX_RETRIES + 1):  # +1 для первой попытки
+    for attempt in range(MAX_RETRIES + 1):
         try:
             if attempt > 0:
                 print(f"Retry: Повторная попытка {attempt}/{MAX_RETRIES} после задержки {delay:.1f}с...")
                 await asyncio.sleep(delay)
-                delay = min(delay * 2, MAX_RETRY_DELAY)  # Экспоненциальная задержка
-            
+                delay = min(delay * 2, MAX_RETRY_DELAY)
             return await func(*args, **kwargs)
-            
         except Exception as e:
             last_error = e
-            
             if attempt < MAX_RETRIES and should_retry(e):
                 safe_print_error(f"Attention: Ошибка (попытка {attempt+1}/{MAX_RETRIES+1}): {e}")
-                # Для rate limit (429) можно использовать Retry-After из заголовков
                 if isinstance(e, RateLimitError) and hasattr(e, 'response'):
                     retry_after = e.response.headers.get('retry-after')
                     if retry_after:
@@ -104,10 +89,7 @@ async def call_with_retry(func, *args, **kwargs):
                             pass
                 continue
             else:
-                # Неповторяемая ошибка или кончились попытки
                 raise e
-    
-    # Если все попытки исчерпаны
     raise last_error
 
 # ======================== ПРОВЕРКА КЛЮЧА ========================
@@ -117,7 +99,6 @@ if not ZHIPU_API_KEY:
 aclient = AsyncOpenAI(api_key=ZHIPU_API_KEY, base_url=BASE_URL)
 
 async def test_api_key():
-    """Проверяет, работает ли ключ, выполняя простой запрос."""
     async def _test():
         return await aclient.chat.completions.create(
             model=MODEL_NAME,
@@ -125,15 +106,14 @@ async def test_api_key():
             temperature=0,
             max_tokens=5
         )
-    
     try:
-        response = await call_with_retry(_test)
+        await call_with_retry(_test)
         print("Ключ действителен, начинаем обработку...")
     except Exception as e:
         safe_print_error(e)
         raise RuntimeError("Проверьте ключ, base_url и имя модели.") from e
 
-# ======================== УЛУЧШЕННЫЕ ПРОМПТЫ С RETRY ========================
+# ======================== ОСНОВНЫЕ ПРОМПТЫ ========================
 async def get_country(title, author, description, language):
     prompt = f"""
 Based on the following book information, guess the most likely country of origin (where the author is from or the book was first published). 
@@ -155,7 +135,6 @@ Language: {language}
             temperature=0,
             max_tokens=100
         )
-    
     try:
         response = await call_with_retry(_make_call)
         content = response.choices[0].message.content
@@ -216,7 +195,6 @@ Characters: {characters}
             temperature=0,
             max_tokens=600
         )
-    
     try:
         response = await call_with_retry(_make_call)
         content = response.choices[0].message.content
@@ -234,6 +212,71 @@ Characters: {characters}
         safe_print_error(e)
         return {"events": [], "figures": [], "time_period": None}
 
+# ======================== ВАЛИДАЦИОННЫЕ ПРОМПТЫ ========================
+async def validate_historical_and_country(title, author, description, characters, genres,
+                                          current_country, current_events, current_figures, current_time_period):
+    prev_info = f"""
+- Country: {current_country if current_country else 'null'}
+- Events: {current_events}
+- Figures: {current_figures}
+- Time period: {current_time_period if current_time_period else 'null'}
+"""
+    prompt = f"""
+You are a literary expert and historian. We have previously analyzed a book and extracted some information about its origin, historical events, and historical figures. Please review and correct this information if necessary. Return a JSON object with the keys: "country", "events", "figures", "time_period".
+
+- "country": the most likely country of origin (string or null). Use the author's nationality, language, and any clues.
+- "events": list of real historical events mentioned (strings). Exclude fictional events (like magic tournaments).
+- "figures": list of real historical figures (strings). Exclude fictional characters.
+- "time_period": string or null (e.g., "19th century").
+
+Previous extraction gave:
+{prev_info}
+
+Now, using the book's full information, correct any mistakes and provide your final answer. Keep the lists concise and relevant. Only include real historical events and figures.
+
+Title: {title}
+Author: {author}
+Description: {description}
+Genres: {genres if genres else 'not provided'}
+Characters: {characters if characters else 'not provided'}
+
+Only output valid JSON with these four keys.
+"""
+    async def _make_call():
+        return await aclient.chat.completions.create(
+            model=MODEL_NAME,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0,
+            max_tokens=1200
+        )
+    try:
+        response = await call_with_retry(_make_call)
+        content = response.choices[0].message.content
+        parsed = extract_json(content)
+        if parsed and isinstance(parsed, dict):
+            return {
+                "country": parsed.get("country"),
+                "events": parsed.get("events", []),
+                "figures": parsed.get("figures", []),
+                "time_period": parsed.get("time_period")
+            }
+        else:
+            print(f"Attention: Не удалось распарсить валидационный ответ. Получено: {content[:300]}")
+            return {
+                "country": current_country,
+                "events": current_events,
+                "figures": current_figures,
+                "time_period": current_time_period
+            }
+    except Exception as e:
+        safe_print_error(e)
+        return {
+            "country": current_country,
+            "events": current_events,
+            "figures": current_figures,
+            "time_period": current_time_period
+        }
+
 # ======================== ОБРАБОТКА КНИГИ ========================
 async def process_book(book):
     title = book.get(COL_TITLE, "")
@@ -244,30 +287,60 @@ async def process_book(book):
     characters = book.get("characters", "")
     if pd.isna(characters):
         characters = ""
-    
+    genres_field = book.get("genres", "")
+    if pd.isna(genres_field):
+        genres_field = ""
+
     country_task = asyncio.create_task(get_country(title, author, description, language))
     historical_task = asyncio.create_task(get_historical_links(title, description, characters))
-    
+
     country_result = await country_task
     historical_result = await historical_task
 
-    # Удаляем автора из historical_figures, если книга не является биографией
+    # Удаляем автора из figures, если не биография
     if historical_result.get("figures"):
         author_name = book.get(COL_AUTHOR, "")
-        # Проверяем жанры на наличие биографического жанра
-        genres_field = book.get("genres", "")
         is_biography = False
         if isinstance(genres_field, str):
             genres_lower = genres_field.lower()
             if "biography" in genres_lower or "autobiography" in genres_lower:
                 is_biography = True
-        # Если книга не биография и автор указан, удаляем его из списка
         if not is_biography and author_name and pd.notna(author_name):
             author_lower = author_name.lower().strip()
-            # Фильтруем список, оставляя только те имена, которые не совпадают с автором
             filtered = [fig for fig in historical_result["figures"] if fig.lower().strip() != author_lower]
             historical_result["figures"] = filtered
-    
+
+    if DOUBLE_VALIDATION:
+        validated = await validate_historical_and_country(
+            title=title,
+            author=author,
+            description=description,
+            characters=characters,
+            genres=genres_field,
+            current_country=country_result.get("country"),
+            current_events=historical_result.get("events", []),
+            current_figures=historical_result.get("figures", []),
+            current_time_period=historical_result.get("time_period")
+        )
+        country_result["country"] = validated["country"]
+        historical_result["events"] = validated["events"]
+        historical_result["figures"] = validated["figures"]
+        historical_result["time_period"] = validated["time_period"]
+
+    # Эвристика для страны, если всё ещё None
+    if country_result.get("country") is None:
+        if language and "english" in language.lower():
+            if author and any(x in author.lower() for x in ["rowling", "adams", "tolkien", "bryson", "mcphee"]):
+                country_result["country"] = "United Kingdom"
+            else:
+                country_result["country"] = "United States"
+        elif language and "russian" in language.lower():
+            country_result["country"] = "Russia"
+        elif language and "french" in language.lower():
+            country_result["country"] = "France"
+        elif language and "spanish" in language.lower():
+            country_result["country"] = "Spain"
+
     enriched = book.copy()
     enriched["country"] = country_result.get("country")
     enriched["historical_events"] = historical_result.get("events", [])
@@ -284,20 +357,51 @@ async def process_all(books, concurrency=CONCURRENCY):
     results = await asyncio.gather(*tasks)
     return results
 
+# ======================== ПОСТОБРАБОТКА ДЛЯ ХУДОЖЕСТВЕННЫХ КНИГ ========================
+def is_fiction(genres_str):
+    """
+    Определяет, является ли книга художественной литературой.
+    Возвращает True, если книга художественная, иначе False.
+    """
+    if not isinstance(genres_str, str):
+        return False
+    genres_lower = genres_str.lower()
+    # Сначала проверяем документальные жанры (если есть, то не художественная)
+    if any(word in genres_lower for word in ['biography', 'nonfiction', 'non-fiction', 'history', 'science', 'reference', 'philosophy', 'religion', 'cookbook']):
+        return False
+    # Если есть явные признаки художественной литературы
+    if any(word in genres_lower for word in ['fiction', 'fantasy', 'sci-fi', 'young adult', 'children', 'magic', 'adventure']):
+        return True
+    # Если в жанрах есть слово "novel" (роман) – тоже художественная
+    if 'novel' in genres_lower:
+        return True
+    # По умолчанию считаем, что данные могут быть художественными? Лучше вернуть False, чтобы не терять данные.
+    return False
+
+def postprocess_historical_fields(books):
+    """Очищает historical_events и historical_figures для художественных книг."""
+    for book in books:
+        genres = book.get('genres', '')
+        if is_fiction(genres):
+            book['historical_events'] = []
+            book['historical_figures'] = []
+            # При желании можно очистить и временной период
+            # book['time_period'] = None
+    return books
+
+# ======================== ОСНОВНАЯ ФУНКЦИЯ ========================
 def main():
     if not os.path.exists(INPUT_CSV):
         print(f"Error: Файл {INPUT_CSV} не найден.")
         return
     try:
         df = pd.read_csv(INPUT_CSV, encoding=ENCODING)
-        # Очистка имён колонок от пробельных символов
         df.columns = df.columns.str.strip()
-        # Удаление пустых колонок
         df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
     except Exception as e:
         print(f"Error: Ошибка чтения CSV: {e}")
         return
-    print(f"Dataset_info: Загружено {len(df)} книг.")
+    print(f"Dataset info: Загружено {len(df)} книг.")
     required_cols = [COL_TITLE, COL_AUTHOR, COL_DESCRIPTION, COL_LANGUAGE]
     missing = [col for col in required_cols if col not in df.columns]
     if missing:
@@ -310,9 +414,11 @@ def main():
         return
     books = df.to_dict(orient="records")
     enriched_books = asyncio.run(process_all(books, concurrency=CONCURRENCY))
+    # Постобработка: удалить исторические данные для художественных книг
+    enriched_books = postprocess_historical_fields(enriched_books)
     with open(OUTPUT_JSON, "w", encoding=ENCODING) as f:
         json.dump(enriched_books, f, indent=2, ensure_ascii=False)
-    print(f"-----------------------------------Обработка завершена. Результаты сохранены в {OUTPUT_JSON}-----------------------------------")
+    print(f"--------------------------------Обработка завершена. Результаты сохранены в {OUTPUT_JSON}------------------------------------------------")
 
 if __name__ == "__main__":
     main()
