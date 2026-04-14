@@ -76,13 +76,6 @@ Due to the large file size, the raw dataset is stored on Google Drive:
    npm install
    npm run dev
    ```
-   
-**(Optional) Regenerate the Graphs from Scratch**
-   ```bash
-cd ../data-processing
-pip install -r requirements.txt
-python generate_graphs.py
-   ```
 
 This will create new HTML files in:
 ../frontend/public/graphs/
