@@ -1,0 +1,262 @@
+/* Global resets */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: #0a0a0a;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background-image: url('/images/left-bg.png'), url('/images/right-bg.png');
+  background-repeat: no-repeat, no-repeat;
+  background-position: left center, right center;
+  background-size: auto 100%, auto 100%;
+  background-attachment: fixed, fixed;
+}
+
+@font-face {
+  font-family: 'MyCustomFont';
+  src: url('/fonts/BarlowCondensed-Medium.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap; /* for smooth loading */
+}
+
+/* Apply the font to all text elements on the page */
+body, .container, .text-block p, .between-graphs-text {
+  font-family: 'MyCustomFont', sans-serif; /* sans-serif — fallback */
+}
+
+@font-face {
+  font-family: 'MyCustomFontH';
+  src: url('/fonts/Thernaly-Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap; /* for smooth loading */
+}
+
+/* Apply the heading font to specific elements */
+.intro h1, .intro h2, .text-block h2 {
+  font-family: 'MyCustomFontH', sans-serif; /* sans-serif — fallback */
+}
+
+.container {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 2rem 2rem 4rem;
+  background: #0a0a0a;
+  color: #eee;
+}
+
+/* Intro section */
+.intro {
+  text-align: center;
+  padding: 2rem;
+}
+
+.intro h1 {
+  background: linear-gradient(135deg, #a8c0ff, #3f2b96);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-size: 2.8rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+}
+
+.intro h2 {
+  font-size: 1.4rem;
+  font-weight: normal;
+  color: #bbb;
+  line-height: 1.3;
+}
+
+.scroll-hint {
+  font-family: 'MyCustomFontH', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 500;
+  color: #7437f3;
+  margin: 1rem 0;
+}
+
+/* Container for all blocks */
+.graph-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 6rem; /* large spacing between blocks */
+}
+
+/* Each block: graph + text below */
+.graph-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(20, 20, 30, 0.4);
+  backdrop-filter: blur(4px);
+  border-radius: 36px;
+  padding: 2rem 2rem 2rem 2rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 0 15px rgba(155, 89, 182, 0.2);
+}
+
+.graph-block:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0 30px rgba(155, 89, 182, 0.5);
+}
+
+/* Wrapper for the graph — takes almost full width */
+.graph-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 1100px;  /* graph is large but not full screen width */
+  margin: 0 auto;
+  border-radius: 24px;
+  overflow: hidden;
+  background: #111;
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5);
+}
+
+/* The iframe itself */
+.graph-iframe {
+  width: 100%;
+  height: 550px;      /* tall enough */
+  border: none;
+  display: block;
+  border-radius: 24px;
+  background-color: #111;
+}
+
+/* Initial hidden state for graphs */
+.graph-fade-hidden {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.7s ease-out, transform 0.6s ease-out;
+}
+
+/* Visible state */
+.graph-fade-visible {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.7s ease-out, transform 0.6s ease-out;
+}
+
+/* Text block below the graph */
+.text-block {
+  text-align: center;
+  max-width: 800px;
+  margin: 2rem auto 0;
+  padding: 0 1rem;
+}
+
+.text-block h2 {
+  font-size: 1.9rem;
+  margin-bottom: 1rem;
+  color: #fff;
+  border-left: 5px solid #9b59b6;
+  border-right: 5px solid #9b59b6;
+  display: inline-block;
+  padding: 0 1.2rem;
+}
+
+.text-block p {
+  font-size: 1.1rem;
+  line-height: 1.5;
+  color: #ccc;
+  text-align: justify;
+}
+
+/* Loader overlay on top of iframe */
+.iframe-loader-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #1a1a2e;
+  border-radius: 24px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.loader-content {
+  text-align: center;
+  color: #ccc;
+  font-size: 1.2rem;
+}
+
+.loader-content div:first-child {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Responsive: on tablets and phones, make graph a bit smaller */
+@media (max-width: 900px) {
+  .container {
+    padding: 1rem;
+  }
+  .graph-iframe {
+    height: 400px;
+  }
+  .text-block h2 {
+    font-size: 1.5rem;
+  }
+  .text-block p {
+    font-size: 1rem;
+  }
+  .graph-blocks {
+    gap: 3rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .graph-iframe {
+    height: 300px;
+  }
+  .graph-block {
+    padding: 1rem;
+  }
+}
+
+/* Narrative text inserts — white, large, no background, left-aligned, takes 2/3 width */
+.between-graphs-text {
+  margin: 3rem 0;
+  padding: 0;
+  background: transparent;
+  border-left: none;
+  border-radius: 0;
+  font-size: 1.4rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: white;
+  text-align: left;
+  box-shadow: none;
+  transition: opacity 0.6s ease-out, transform 0.5s ease-out;
+  width: 73%;     /* ensures it doesn't stretch more */
+}
+
+/* Additional: to keep text closer to left edge (if .container has padding) */
+.between-graphs-text p {
+  margin: 0;
+}
+
+/* Hidden state (before entering viewport) */
+.fade-in-hidden {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+/* Visible state (after Intersection Observer triggers) */
+.fade-in-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
