@@ -72,10 +72,9 @@ Due to the large file size, the raw dataset is stored on Google Drive:
 2. **Set up the Frontend**
 
    ```bash
-   cd frontend
-   npm install
-   npm start
-
+cd frontend
+npm install
+npm run dev
    ```
    
 **(Optional) Regenerate the Graphs from Scratch**
