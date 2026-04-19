@@ -1,0 +1,24 @@
+services:
+  # Сервис для Python-бэкенда
+  - type: web
+    name: literary-evolution-api
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.6
+
+  # Сервис для статического фронтенда (React)
+  - type: web
+    name: literary-evolution-frontend
+    runtime: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: ./frontend/build
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://literary-evolution-api.onrender.com/*
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://literary-evolution-api.onrender.com
